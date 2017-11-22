@@ -86,7 +86,7 @@ class GameSquare extends Component {
         return (
             <td onClick={this.squareClicked} height="60" width="60">
                 {this.getStatus()}
-                <div className="coords">({this.props.loc_x}, {this.props.loc_y}) </div>
+                <div className="coords">() </div>
             </td>
         )
     }

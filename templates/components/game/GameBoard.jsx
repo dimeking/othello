@@ -103,7 +103,7 @@ class GameBoard extends Component {
     }
 
     renderBoard() {
-        // renders the obstruction grid/board
+        // renders the othello grid/board
         // build by row and then by col, based on the height and width values
         let board = []
         let cur_row = -1
