@@ -40,7 +40,7 @@ MIDDLEWARE_CLASSES = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'channels_obstruction.urls'
+ROOT_URLCONF = 'channels_othello.urls'
 
 TEMPLATES = [
     {
@@ -58,7 +58,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'channels_obstruction.wsgi.application'
+WSGI_APPLICATION = 'channels_othello.wsgi.application'
 
 
 # Database
@@ -115,7 +115,7 @@ STATICFILES_DIRS = [
 CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "asgiref.inmemory.ChannelLayer",
-        "ROUTING": "channels_obstruction.routing.channel_routing",
+        "ROUTING": "channels_othello.routing.channel_routing",
     },
 }
 
