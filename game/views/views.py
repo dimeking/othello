@@ -75,6 +75,7 @@ class GameView(TemplateView):
         if not self.game.opponent and not self.game.completed:
             self.game.opponent = user
             self.game.save()
+            self.game.init()
             return super(GameView, self).dispatch(request, *args, **kwargs)
         else:
             messages.add_message(request, messages.ERROR, 'Sorry, the selected game is not available.')

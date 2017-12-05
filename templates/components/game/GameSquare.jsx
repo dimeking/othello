@@ -1,10 +1,10 @@
 import React, {Component, PropTypes} from 'react'
 
-const creator_icon = <img src="/static/img/blue-player.png" />
+const creator_icon = <img src="/static/img/black_piece_1.jpeg" />
 const creator_surround_icon = <img src="/static/img/blue-surrounding.png"/>
-const opponent_icon = <img src="/static/img/red-player.png" />
+const opponent_icon = <img src="/static/img/white_piece_2.jpeg" />
 const opponent_surround_icon = <img src="/static/img/red-surrounding.png"/>
-const empty_icon = <img src="/static/img/empty.png" />
+const empty_icon = <img src="/static/img/empty_3.jpeg" />
 
 class GameSquare extends Component {
     constructor(props) {
@@ -86,7 +86,7 @@ class GameSquare extends Component {
         return (
             <td onClick={this.squareClicked} height="60" width="60">
                 {this.getStatus()}
-                <div className="coords">() </div>
+                <div className="coords"> </div>
             </td>
         )
     }

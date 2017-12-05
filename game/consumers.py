@@ -75,7 +75,7 @@ class GameConsumer(JsonWebsocketConsumer):
         """
         channel_session_user = True
         action = content['action']
-        print("MESSAGE ON OBSTRUCTION - {0}".format(action))
+        print("MESSAGE ON OTHELLO - {0}".format(action))
 
         if action == 'claim_square':
             # get the square object

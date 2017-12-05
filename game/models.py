@@ -12,8 +12,8 @@ class Game(models.Model):
     creator = models.ForeignKey(User, related_name='creator')
     opponent = models.ForeignKey(
         User, related_name='opponent', null=True, blank=True)
-    cols = models.IntegerField(default=6)
-    rows = models.IntegerField(default=6)
+    cols = models.IntegerField(default=8)
+    rows = models.IntegerField(default=8)
     current_turn = models.ForeignKey(User, related_name='current_turn')
 
     # dates
@@ -64,11 +64,26 @@ class Game(models.Model):
                     row=row,
                     col=col
                 )
+
                 new_square.save()
         # put first log into the GameLog
         new_game.add_log('Game created by {0}'.format(new_game.creator.username))
 
         return new_game
+
+    def init(self):
+        # the center 4 squares are pre-selected between creator & opponent
+        center_square = self.get_game_square(self.rows/2 - 1, self.cols/2 - 1)
+        center_square.init('Selected', self.creator)
+
+        center_square = self.get_game_square(self.rows/2, self.cols/2)
+        center_square.init('Selected', self.creator)
+
+        center_square = self.get_game_square(self.rows/2 - 1, self.cols/2)
+        center_square.init('Selected', self.opponent)
+
+        center_square = self.get_game_square(self.rows/2, self.cols/2 -1)
+        center_square.init('Selected', self.opponent)
 
     def add_log(self, text, user=None):
         """
@@ -83,12 +98,12 @@ class Game(models.Model):
         """
         return GameSquare.objects.filter(game=self)
 
-    def get_game_square(row, col):
+    def get_game_square(self, row, col):
         """
         Gets a square for a game by it's row and col pos
         """
         try:
-            return GameSquare.objects.get(game=self, cols=col, rows=row)
+            return GameSquare.objects.get(game=self, col=col, row=row)
         except GameSquare.DoesNotExist:
             return None
 
@@ -179,48 +194,147 @@ class GameSquare(models.Model):
             # TODO: Handle exception for gamesquare
             return None
 
+    def init(self, status_type, user):
+        self.owner = user
+        self.status = status_type
+        self.save(update_fields=['status', 'owner'])
+
     def get_surrounding(self):
         """
         Returns this square's surrounding neighbors that are still Free
         """
         # TODO:
         # http://stackoverflow.com/questions/2373306/pythonic-and-efficient-way-of-finding-adjacent-cells-in-grid
-        ajecency_matrix = [(i, j) for i in (-1, 0, 1)
+        adjecency_matrix = [(i, j) for i in (-1, 0, 1)
                            for j in (-1, 0, 1) if not (i == j == 0)]
         results = []
-        for dx, dy in ajecency_matrix:
+        for dx, dy in adjecency_matrix:
             # boundaries check
             if 0 <= (self.col + dy) < self.game.cols and 0 <= self.row + dx < self.game.rows:
                 # yield grid[x_coord + dx, y_coord + dy]
                 results.append((self.col + dy, self.row + dx))
         return results
 
+    def get_nearest_user_matrix(self, user):
+        """
+        Returns this square's nearest that are of the
+        """
+        # TODO:
+        # http://stackoverflow.com/questions/2373306/pythonic-and-efficient-way-of-finding-adjacent-cells-in-grid
+        adjacency_matrix = [(i, j) for i in (-1, 0, 1)
+                           for j in (-1, 0, 1) if not (i == j == 0)]
+        results = []
+        for dx, dy in adjacency_matrix:
+
+            col = self.col + dy
+            row = self.row + dx
+
+            nearest_coord = (-1, -1)
+            # boundaries check
+            while 0 <= col < self.game.cols and 0 <= row < self.game.rows:
+
+                # get square by coords
+                square = self.game.get_square_by_coords((col, row))
+
+                # failure
+                if not square or square.status == 'Free':
+                    break
+                
+                # success
+                if square.owner == user:
+                    nearest_coord = (col, row)
+                    break
+                
+                # keep looking
+                col = col + dy
+                row = row + dx
+
+            results.append(nearest_coord)                
+
+        return results
+
+    def get_path_squares(self, coordOne, coordTwo):
+
+        dx = coordOne[1] < coordTwo[1] and 1 or -1
+        if coordOne[1] == coordTwo[1]: dx = 0 
+
+        dy = coordOne[0] < coordTwo[0] and 1 or -1
+        if coordOne[0] == coordTwo[0]: dy = 0 
+        
+        col = coordOne[0]
+        row = coordOne[1]
+        
+        results = []
+        while col != coordTwo[0] or row != coordTwo[1]:
+            results.append((col, row))
+            col = col + dy
+            row = row + dx
+
+        results.append(coordTwo)
+        return results
+
+
+    def get_nearest(self, user):
+        # get nearest squares 
+        nearest_matrix = self.get_nearest_user_matrix(user)
+        
+        # remove surrounding squares
+        surrounding = self.get_surrounding()
+
+        invalid = (-1, -1)
+        nearest_valid = [x for x in nearest_matrix if x != invalid]
+        nearest = [x for x in nearest_valid if x not in surrounding]
+
+        return nearest
+
+    def claimable(self, user):
+
+        if self.owner != null:
+            return False
+
+        # get nearest squares of this user that are not surrounding
+        nearest = self.get_nearest(user)
+
+        # dont claim if no square of this user is found enclosing opponent squares 
+        if not nearest:
+            return False
+
+        return True
+
     def claim(self, status_type, user):
         """
         Claims the square for the user
         """
+        # get nearest squares of this user that are not surrounding
+        nearest = self.get_nearest(user)
+
+        # dont claim if no square of this user is found enclosing opponent squares 
+        if not nearest:
+            return
+
         self.owner = user
         self.status = status_type
         self.save(update_fields=['status', 'owner'])
 
-        # get surrounding squares and update them if they can be updated
-        surrounding = self.get_surrounding()
+        # update all the squares btw this and nearest one of this uear
+        for coords in nearest:
 
-        for coords in surrounding:
-            # get square by coords
-            square = self.game.get_square_by_coords(coords)
+            path_squares = self.get_path_squares((self.col, self.row), coords)
+            for path_square_coord in path_squares:
+                # get square by coords
+                square = self.game.get_square_by_coords(path_square_coord)
 
-            if square and square.status == 'Free':
-                square.status = 'Surrounding'
-                square.owner = user
-                square.save()
+                if square and square.owner != user:
+                    square.status = status_type
+                    square.owner = user
+                    square.save()
 
         # add log entry for move
         self.game.add_log('Square claimed at ({0}, {1}) by {2}'
                           .format(self.col, self.row, self.owner.username))
 
         # set the current turn for the other player if there are still free
-        # squares to claim
+            # squares to claim
         if self.game.get_all_game_squares().filter(status='Free'):
             self.game.next_player_turn()
         else:
