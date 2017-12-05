@@ -4,7 +4,9 @@ A simple game of Othello created to explore Django + Django Channels + ReactJS
 
 ## Synopsis
 
-I started this project to explore the [Django Channels](https://github.com/django/channels), which is an upcoming core app that adds asynchronous WebSocket support to the wonderful [Django Framework](http://www.djangoproject.com). Channels makes it very easy to build "real-time" apps in pure Django and Python, providing a great way to develop applications that require features such as "real-time" collaboration or chat for example.  
+This project is based on Cody Parker's Channel Obstruction with updated logic, content to Othello (or Reversi) by Hari Raja as well as other fixes.
+
+Explore the [Django Channels](https://github.com/django/channels), which is an upcoming core app that adds asynchronous WebSocket support to the wonderful [Django Framework](http://www.djangoproject.com). Channels makes it very easy to build "real-time" apps in pure Django and Python, providing a great way to develop applications that require features such as "real-time" collaboration or chat for example.  
 
 [Othello](hhttps://en.wikipedia.org/wiki/Reversi) is a strategy board game for two players, played on an 8×8 uncheckered board. There are sixty-four identical game pieces called disks (often spelled "discs"), which are light on one side and dark on the other. Players take turns placing disks on the board with their assigned color facing up. During a play, any disks of the opponent's color that are in a straight line and bounded by the disk just placed and another disk of the current player's color are turned over to the current player's color.
 
